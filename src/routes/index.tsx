@@ -29,7 +29,7 @@ function Dashboard() {
   return (
     <AppShell>
       <PageHeader
-        eyebrow="Local / Encrypted at rest"
+        eyebrow="Local / No cloud usage"
         title="SCANDEX"
         right={
           <Link

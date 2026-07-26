@@ -199,8 +199,16 @@ function Dossier() {
             placeholder="vip, follow-up"
           />
         </div>
-        
-        <VoiceRecorderWidget voiceNote={form.voiceNote} onChange={(b) => update("voiceNote", b)} />
+        <VoiceRecorderWidget
+          voiceNotes={
+            form.voiceNotes
+              ? form.voiceNotes
+              : form.voiceNote
+              ? [form.voiceNote]
+              : []
+          }
+          onChange={(b) => update("voiceNotes", b)}
+        />
       </section>
 
       {dirty && (

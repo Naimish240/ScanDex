@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { AppShell, PageHeader } from "@/components/AppShell";
-import { contactsToCSV, downloadFile } from "@/lib/export";
-import { Download, Trash2, ShieldCheck, HardDrive } from "lucide-react";
+import { contactsToCSV, downloadFile, exportFullDataZip } from "@/lib/export";
+import { Download, Trash2, ShieldCheck, HardDrive, FileArchive } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -24,6 +24,10 @@ function SettingsPage() {
   async function exportCSV() {
     const csv = contactsToCSV(contacts, events);
     downloadFile(`scandex-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv", csv);
+  }
+
+  async function exportZIP() {
+    await exportFullDataZip(contacts, events);
   }
 
   async function wipe() {
@@ -52,13 +56,22 @@ function SettingsPage() {
         </Group>
 
         <Group title="Export">
-          <button onClick={exportCSV} className="w-full flex items-center gap-3 p-4 bg-card ring-1 ring-border rounded-2xl">
-            <Download className="size-5 text-primary" />
-            <div className="flex-1 text-left">
-              <p className="text-sm font-semibold">Export all as CSV</p>
-              <p className="text-xs text-muted-foreground">Open in spreadsheets or CRM import.</p>
-            </div>
-          </button>
+          <div className="space-y-2">
+            <button onClick={exportCSV} className="w-full flex items-center gap-3 p-4 bg-card ring-1 ring-border rounded-2xl">
+              <Download className="size-5 text-primary" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold">Export all as CSV</p>
+                <p className="text-xs text-muted-foreground">Open in spreadsheets or CRM import.</p>
+              </div>
+            </button>
+            <button onClick={exportZIP} className="w-full flex items-center gap-3 p-4 bg-card ring-1 ring-border rounded-2xl">
+              <FileArchive className="size-5 text-primary" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold">Export Full Archive (.zip)</p>
+                <p className="text-xs text-muted-foreground">Includes CSV, images, and voice notes.</p>
+              </div>
+            </button>
+          </div>
         </Group>
 
         <Group title="OCR">

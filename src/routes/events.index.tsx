@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Plus, Calendar, MapPin, X } from "lucide-react";
 
-export const Route = createFileRoute("/events")({
+export const Route = createFileRoute("/events/")({
   head: () => ({
     meta: [
       { title: "Events — ScanDex" },

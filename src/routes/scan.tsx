@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { runOCR } from "@/lib/ocr";
 import { extractFields } from "@/lib/extract";
 import { AppShell } from "@/components/AppShell";
-import { NewEventDialog } from "./events";
+import { NewEventDialog } from "./events.index";
 import { ArrowLeft, Camera as CameraIcon, Upload, Loader2, Check } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { z } from "zod";

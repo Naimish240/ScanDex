@@ -27,6 +27,7 @@ export interface ContactRow {
   backImage?: Blob;
   profileImage?: Blob;
   voiceNote?: Blob;
+  voiceNotes?: Blob[];
   createdAt: number;
   updatedAt: number;
 }

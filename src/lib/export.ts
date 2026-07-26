@@ -31,3 +31,68 @@ export function downloadFile(name: string, mime: string, content: string | Blob)
   a.href = url; a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+import JSZip from "jszip";
+import { Share } from "@capacitor/share";
+import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Capacitor } from "@capacitor/core";
+
+export async function exportFullDataZip(contacts: ContactRow[], events: EventRow[]) {
+  const zip = new JSZip();
+  
+  // 1. Add CSV
+  const csvContent = contactsToCSV(contacts, events);
+  zip.file("contacts.csv", csvContent);
+
+  // 2. Add images and audio
+  const imgFolder = zip.folder("images");
+  const audioFolder = zip.folder("audio");
+  
+  for (const c of contacts) {
+    const safeName = (c.name || `Contact_${c.id}`).replace(/[^a-z0-9]/gi, '_');
+    
+    if (c.frontImage && imgFolder) {
+      imgFolder.file(`${safeName}_front.jpg`, c.frontImage);
+    }
+    if (c.profileImage && imgFolder) {
+      imgFolder.file(`${safeName}_profile.jpg`, c.profileImage);
+    }
+    
+    if (c.voiceNote && audioFolder) {
+      audioFolder.file(`${safeName}_note.aac`, c.voiceNote);
+    }
+    
+    if (c.voiceNotes && audioFolder) {
+      c.voiceNotes.forEach((blob, idx) => {
+        audioFolder.file(`${safeName}_note_${idx + 1}.aac`, blob);
+      });
+    }
+  }
+
+  // 3. Generate ZIP blob
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+
+  // 4. Download or Share
+  if (Capacitor.isNativePlatform()) {
+    const reader = new FileReader();
+    reader.readAsDataURL(zipBlob);
+    await new Promise(r => reader.onloadend = r);
+    const base64Data = (reader.result as string).split(',')[1];
+    
+    const fileName = `scandex_export_${Date.now()}.zip`;
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Cache
+    });
+    
+    await Share.share({
+      title: 'ScanDex Export',
+      text: 'ScanDex full data export archive.',
+      url: result.uri,
+      dialogTitle: 'Share or Save Export'
+    });
+  } else {
+    downloadFile("scandex_export.zip", "application/zip", zipBlob);
+  }
+}

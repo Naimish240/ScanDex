@@ -7,6 +7,8 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { useState, useEffect } from "react";
+import { WebSplashScreen } from "@/components/WebSplashScreen";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -83,10 +85,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 
 function RootComponent() {
+  const [showSplash, setShowSplash] = useState(true);
   const { queryClient } = Route.useRouteContext();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-    </QueryClientProvider>
+    <>
+      {showSplash && <WebSplashScreen onComplete={() => setShowSplash(false)} />}
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
+    </>
   );
 }
