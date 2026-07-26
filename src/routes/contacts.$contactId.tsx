@@ -8,6 +8,7 @@ import {
   Trash2, Save, Share2,
 } from "lucide-react";
 import { VoiceRecorderWidget } from "@/components/VoiceRecorder";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 export const Route = createFileRoute("/contacts/$contactId")({
   head: () => ({
@@ -58,6 +59,26 @@ function Dossier() {
     navigate({ to: "/events/$eventId", params: { eventId: String(c!.eventId) } });
   }
 
+  async function changeProfileImage() {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Prompt,
+      });
+      if (photo.base64String) {
+        const res = await fetch(`data:image/jpeg;base64,${photo.base64String}`);
+        const blob = await res.blob();
+        update("profileImage", blob);
+        const url = URL.createObjectURL(blob);
+        setPortraitUrl(url);
+      }
+    } catch (e) {
+      console.error("Camera error", e);
+    }
+  }
+
   function shareEmail() {
     const c2 = { ...c, ...form };
     const body = [
@@ -87,11 +108,19 @@ function Dossier() {
           >
             <ArrowLeft className="size-3.5" /> {event?.name || "Back"}
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {dirty && (
+              <button
+                onClick={save}
+                className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-sm"
+              >
+                Save
+              </button>
+            )}
             <button onClick={shareEmail} className="size-9 rounded-full grid place-items-center bg-secondary" aria-label="Share via email">
               <Share2 className="size-4" />
             </button>
-            <button onClick={remove} className="size-9 rounded-full grid place-items-center bg-secondary" aria-label="Delete">
+            <button onClick={remove} className="size-9 rounded-full grid place-items-center bg-secondary text-destructive" aria-label="Delete">
               <Trash2 className="size-4" />
             </button>
           </div>
@@ -122,7 +151,11 @@ function Dossier() {
       {/* Profile */}
       <section className="px-5 mt-6">
         <div className="flex items-start gap-4">
-          <div className="size-16 rounded-2xl bg-secondary ring-1 ring-border overflow-hidden flex-none grid place-items-center">
+          <button
+            onClick={changeProfileImage}
+            className="size-16 rounded-2xl bg-secondary ring-1 ring-border overflow-hidden flex-none grid place-items-center relative"
+            aria-label="Change profile picture"
+          >
             {portraitUrl ? (
               <img src={portraitUrl} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -130,7 +163,7 @@ function Dossier() {
                 {(form.name || "?").slice(0, 2).toUpperCase()}
               </span>
             )}
-          </div>
+          </button>
           <div className="flex-1 min-w-0 space-y-1">
             <input
               className="w-full text-xl font-bold tracking-tight bg-transparent outline-none border-b border-transparent focus:border-primary"
@@ -211,16 +244,7 @@ function Dossier() {
         />
       </section>
 
-      {dirty && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30">
-          <button
-            onClick={save}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-lg"
-          >
-            <Save className="size-4" /> Save changes
-          </button>
-        </div>
-      )}
+      <div className="pb-24"></div>
     </AppShell>
   );
 }

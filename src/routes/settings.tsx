@@ -93,6 +93,23 @@ function SettingsPage() {
           </button>
         </Group>
 
+        <Group title="About">
+          <a
+            href="https://github.com/naimish240"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-3 p-4 bg-card ring-1 ring-border rounded-2xl"
+          >
+            <div className="size-8 rounded-full bg-primary/10 text-primary grid place-items-center">
+              ❤️
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold">Made by Naimish240</p>
+              <p className="text-xs text-muted-foreground">View profile on GitHub</p>
+            </div>
+          </a>
+        </Group>
+
         <p className="text-center text-[10px] font-mono text-muted-foreground mt-8 uppercase tracking-widest">
           ScanDex · Local Build
         </p>

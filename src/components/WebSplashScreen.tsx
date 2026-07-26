@@ -32,11 +32,12 @@ export function WebSplashScreen({ onComplete }: { onComplete: () => void }) {
       <div className="flex flex-col items-center animate-fade-in-up">
         <IdCard className="w-24 h-24 text-black mb-6" strokeWidth={1.5} />
         <div
-          className={`text-zinc-500 font-mono tracking-widest text-xs uppercase transition-opacity duration-500 ${
+          className={`text-zinc-500 font-mono tracking-widest text-xs uppercase transition-opacity duration-500 flex flex-col items-center gap-2 ${
             fadeTagline ? "opacity-100" : "opacity-0"
           }`}
         >
-          Your offline rolodex
+          <span>Your offline rolodex</span>
+          <span className="text-[9px] text-zinc-400 normal-case tracking-normal">Made with ❤️ by Naimish240</span>
         </div>
       </div>
     </div>
