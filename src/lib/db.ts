@@ -52,7 +52,7 @@ export async function blobToDataURL(blob?: Blob): Promise<string | undefined> {
     console.warn("[DB] blobToDataURL called with undefined blob");
     return undefined;
   }
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => {
       console.log("[DB] blobToDataURL read complete");
@@ -60,6 +60,7 @@ export async function blobToDataURL(blob?: Blob): Promise<string | undefined> {
     };
     r.onerror = (e) => {
       console.error("[DB] blobToDataURL error:", e);
+      reject(e);
     };
     r.readAsDataURL(blob);
   });

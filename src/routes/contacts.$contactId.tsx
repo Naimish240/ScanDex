@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useState } from "react";
 import { db, blobToDataURL } from "@/lib/db";
 import { AppShell } from "@/components/AppShell";
+import { compressImage } from "@/lib/image";
 import {
   ArrowLeft, Phone, Mail, Globe, Linkedin, Search as SearchIcon,
   Trash2, Save, Share2,
@@ -70,8 +71,9 @@ function Dossier() {
       if (photo.base64String) {
         const res = await fetch(`data:image/jpeg;base64,${photo.base64String}`);
         const blob = await res.blob();
-        update("profileImage", blob);
-        const url = URL.createObjectURL(blob);
+        const compressedBlob = await compressImage(blob, 256, 0.7);
+        update("profileImage", compressedBlob);
+        const url = URL.createObjectURL(compressedBlob);
         setPortraitUrl(url);
       }
     } catch (e) {

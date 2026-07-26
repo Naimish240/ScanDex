@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { runOCR } from "@/lib/ocr";
 import { extractFields } from "@/lib/extract";
+import { compressImage } from "@/lib/image";
 import { AppShell } from "@/components/AppShell";
 import { NewEventDialog } from "./events.index";
 import { ArrowLeft, Camera as CameraIcon, Upload, Loader2, Check } from "lucide-react";
@@ -74,11 +75,9 @@ function ScanPage() {
     }
   }
 
-  useEffect(() => () => {
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    if (backImageUrl) URL.revokeObjectURL(backImageUrl);
-    if (personImageUrl) URL.revokeObjectURL(personImageUrl);
-  }, [imageUrl, backImageUrl, personImageUrl]);
+  useEffect(() => () => { if (imageUrl) URL.revokeObjectURL(imageUrl); }, [imageUrl]);
+  useEffect(() => () => { if (backImageUrl) URL.revokeObjectURL(backImageUrl); }, [backImageUrl]);
+  useEffect(() => () => { if (personImageUrl) URL.revokeObjectURL(personImageUrl); }, [personImageUrl]);
 
   useEffect(() => {
     if (events && events.length > 0 && !selectedEvent) setSelectedEvent(events[0].id);
@@ -115,6 +114,11 @@ function ScanPage() {
       const fields = extractFields(text);
       console.log("[Scan] Extracted fields:", fields);
       
+      console.log("[Scan] Compressing images...");
+      const finalFrontImage = await compressImage(imageBlob, 800, 0.7);
+      const finalBackImage = backImageBlob ? await compressImage(backImageBlob, 800, 0.7) : undefined;
+      const finalPersonImage = personImageBlob ? await compressImage(personImageBlob, 256, 0.7) : undefined;
+
       console.log("[Scan] Saving to database...");
       const id = await db.contacts.add({
         eventId: selectedEvent,
@@ -129,9 +133,9 @@ function ScanPage() {
         notes: "",
         tags: [],
         rawText: text,
-        frontImage: imageBlob,
-        backImage: backImageBlob || undefined,
-        profileImage: personImageBlob || undefined,
+        frontImage: finalFrontImage,
+        backImage: finalBackImage,
+        profileImage: finalPersonImage,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -210,6 +214,9 @@ function ScanPage() {
               <Loader2 className="size-8 animate-spin mx-auto mb-3" />
               <p className="font-mono text-xs uppercase tracking-widest">Reading card</p>
               <p className="font-mono text-2xl font-bold mt-1">{Math.round(progress * 100)}%</p>
+              <p className="font-mono text-[10px] text-white/60 mt-2 uppercase tracking-widest">
+                {progress < 0.2 ? "Initializing Engine..." : progress < 0.5 ? "Preparing Image..." : progress < 1 ? "Extracting Text..." : "Finalizing..."}
+              </p>
             </div>
           </div>
         )}

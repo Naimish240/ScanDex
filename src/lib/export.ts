@@ -40,32 +40,70 @@ import { Capacitor } from "@capacitor/core";
 export async function exportFullDataZip(contacts: ContactRow[], events: EventRow[]) {
   const zip = new JSZip();
   
-  // 1. Add CSV
+  // 1. Add global CSV
   const csvContent = contactsToCSV(contacts, events);
   zip.file("contacts.csv", csvContent);
 
-  // 2. Add images and audio
-  const imgFolder = zip.folder("images");
-  const audioFolder = zip.folder("audio");
-  
+  const evMap = new Map(events.map((e) => [e.id!, e]));
+
+  // 2. Add contact folders
   for (const c of contacts) {
-    const safeName = (c.name || `Contact_${c.id}`).replace(/[^a-z0-9]/gi, '_');
+    const event = evMap.get(c.eventId);
+    const evName = event ? `${event.name}_${event.date.split('T')[0]}` : "UnknownEvent";
+    const evFolder = zip.folder(evName.replace(/[^a-z0-9]/gi, '_'));
+    if (!evFolder) continue;
+
+    const compName = c.company || 'NoCompany';
+    const personName = c.name || `Contact_${c.id}`;
+    const contactFolderName = `${compName}_${personName}`.replace(/[^a-z0-9]/gi, '_');
     
-    if (c.frontImage && imgFolder) {
-      imgFolder.file(`${safeName}_front.jpg`, c.frontImage);
+    const contactFolder = evFolder.folder(contactFolderName);
+    if (!contactFolder) continue;
+
+    const voiceFolder = contactFolder.folder("voice_notes");
+    const photoFolder = contactFolder.folder("photos");
+
+    // Create details.txt
+    const details = [
+      `Name: ${c.name || "N/A"}`,
+      `Title: ${c.title || "N/A"}`,
+      `Company: ${c.company || "N/A"}`,
+      `Email: ${c.email || "N/A"}`,
+      `Phones: ${c.phones.join(", ") || "N/A"}`,
+      `Website: ${c.website || "N/A"}`,
+      `LinkedIn: ${c.linkedin || "N/A"}`,
+      `Address: ${c.address || "N/A"}`,
+      `Tags: ${c.tags.join(", ") || "N/A"}`,
+      `Notes:\n${c.notes || "None"}`,
+    ].join("\n");
+    contactFolder.file("details.txt", details);
+
+    // Helper to safely add blob as array buffer
+    const addFile = async (folder: JSZip | null, filename: string, blob?: Blob) => {
+      if (blob && folder) {
+        try {
+          const buffer = await blob.arrayBuffer();
+          folder.file(filename, buffer);
+        } catch (e) {
+          console.warn(`[Export] Failed to add ${filename}`, e);
+        }
+      }
+    };
+
+    if (photoFolder) {
+      await addFile(photoFolder, "front.jpg", c.frontImage);
+      await addFile(photoFolder, "back.jpg", c.backImage);
+      await addFile(photoFolder, "person.jpg", c.profileImage);
     }
-    if (c.profileImage && imgFolder) {
-      imgFolder.file(`${safeName}_profile.jpg`, c.profileImage);
-    }
-    
-    if (c.voiceNote && audioFolder) {
-      audioFolder.file(`${safeName}_note.aac`, c.voiceNote);
-    }
-    
-    if (c.voiceNotes && audioFolder) {
-      c.voiceNotes.forEach((blob, idx) => {
-        audioFolder.file(`${safeName}_note_${idx + 1}.aac`, blob);
-      });
+
+    if (voiceFolder) {
+      if (c.voiceNotes && c.voiceNotes.length > 0) {
+        for (let i = 0; i < c.voiceNotes.length; i++) {
+          await addFile(voiceFolder, `note_${i + 1}.aac`, c.voiceNotes[i]);
+        }
+      } else if (c.voiceNote) {
+        await addFile(voiceFolder, "note.aac", c.voiceNote);
+      }
     }
   }
 
